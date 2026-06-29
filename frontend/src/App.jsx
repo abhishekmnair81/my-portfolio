@@ -102,13 +102,6 @@ function App() {
       {/* Achievements toast */}
       <AchievementToast achievements={achievements} removeAchievement={removeAchievement} />
 
-      {isAnyDemo && (
-        <div className="fixed top-12 left-0 w-full bg-[#ffaa00]/10 backdrop-blur-md border-b border-[#ffaa00]/30 py-1.5 px-4 z-30 text-center font-code text-[9px] text-[#ffaa00] flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 bg-[#ffaa00] rounded-full animate-blink" />
-          <span>RUNNING IN LOCAL TELEMETRY OFFLINE MODE</span>
-        </div>
-      )}
-
       <Navbar 
         activeSection={activeSection} 
         logoName={about.data?.name} 
