@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg-cyber: #07080b;
+  --bg-card: rgba(13, 17, 24, 0.75);
+  --color-cyan: #00f3ff;
+  --color-green: #39ff14;
+  --color-pink: #ff007f;
+  --color-gold: #ffaa00;
+  --color-muted: #808a9d;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-cyber);
+  color: #e2e8f0;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Futuristic Tech Headers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #08090c;
+  border-left: 1px solid #1a2233;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+  border: 1px solid #08090c;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyan);
+  box-shadow: 0 0 8px var(--color-cyan);
+}
+
+/* Glowing Neon Utilities */
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.25);
+  border-color: var(--color-cyan) !important;
+}
+.glow-green {
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.25);
+  border-color: var(--color-green) !important;
+}
+.glow-pink {
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+  border-color: var(--color-pink) !important;
+}
+
+/* Sci-fi Cyber Carbon Grid Background */
+.bg-cyber-grid {
+  background-color: var(--bg-cyber);
+  background-image: 
+    linear-gradient(rgba(18, 24, 38, 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 24, 38, 0.4) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center;
+}
+
+/* Cyber Scanlines Overlay */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Cyberpunk Clip-Path Buttons */
+.cyber-btn {
+  position: relative;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #000;
+  background-color: var(--color-cyan);
+  padding: 12px 24px;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 243, 255, 0.35);
+}
+
+.cyber-btn:hover {
+  background-color: #ffffff;
+  color: #000;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.cyber-btn:active {
+  transform: translateY(1px);
+}
+
+.cyber-btn-secondary {
+  position: relative;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-cyan);
+  background-color: transparent;
+  border: 1px solid var(--color-cyan);
+  padding: 11px 23px;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.cyber-btn-secondary:hover {
+  background-color: rgba(0, 243, 255, 0.1);
+  color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+.cyber-btn-secondary:active {
+  transform: translateY(1px);
+}
+
+/* Sci-fi Scanning Laser Line */
+.scanner-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-cyan);
+  box-shadow: 0 0 10px var(--color-cyan), 0 0 20px var(--color-cyan);
+  animation: scan 3s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+/* Telemetry Glassmorphic Cards */
+.cyber-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cyber-card:hover {
+  border-color: rgba(0, 243, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 243, 255, 0.06);
+}
+
+/* Glitch text effect for UI elements */
+.glitch-text {
+  text-shadow: 2px 0 var(--color-pink), -2px 0 var(--color-cyan);
+}
+
+/* Helper styles for layouts */
+.font-hud {
+  font-family: 'Orbitron', sans-serif;
+}
+.font-tech {
+  font-family: 'Rajdhani', sans-serif;
+}
+.font-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Blinking animations */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
