@@ -20,14 +20,21 @@ export default function NeuralGrid({ enabled = true }) {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    const nodeTags = [
+      'SYS_CORE_A', 'NET_LINK_B', 'DATA_STREAM', 'PORT_8080', 
+      'HOLO_SYNC', 'FIREWALL', 'DNS_SECURE', 'MEM_CACHE', 
+      'CPU_THREAD_4', 'DB_NODE_3', 'ROUTER_09', 'GATEWAY_WAN'
+    ];
+
     // Particle class
     class Particle {
-      constructor(width, height) {
+      constructor(width, height, index) {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.vx = (Math.random() - 0.5) * 0.4;
         this.vy = (Math.random() - 0.5) * 0.4;
         this.size = Math.random() * 1.5 + 0.8;
+        this.tag = index % 8 === 0 ? nodeTags[Math.floor(index / 8) % nodeTags.length] : null;
       }
 
       update(width, height) {
@@ -44,10 +51,16 @@ export default function NeuralGrid({ enabled = true }) {
         cContext.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         cContext.fillStyle = color;
         cContext.fill();
+
+        if (this.tag) {
+          cContext.fillStyle = color.slice(0, 7) + '44'; // Translucent tag text
+          cContext.font = '7px "JetBrains Mono", monospace';
+          cContext.fillText(this.tag, this.x + 8, this.y + 3);
+        }
       }
     }
 
-    const particles = Array.from({ length: 70 }, () => new Particle(canvas.width, canvas.height));
+    const particles = Array.from({ length: 75 }, (_, idx) => new Particle(canvas.width, canvas.height, idx));
 
     const handleMouseMove = (e) => {
       mouseRef.current.x = e.clientX;

@@ -9,14 +9,14 @@ function SVGDial({ percent, valueText, label, strokeColor, glowColor }) {
   const offset = strokeDash - (percent / 100) * strokeDash;
 
   return (
-    <div className="flex flex-col items-center space-y-2 group">
-      <div className="relative w-20 h-20 flex items-center justify-center">
+    <div className="flex flex-col items-center space-y-1.5 group">
+      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
         {/* Outer spinning dash guide */}
         <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '14s' }} viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="37" stroke={`${strokeColor}22`} strokeWidth="0.8" strokeDasharray="5,6" fill="none" />
         </svg>
 
-        <svg className="w-18 h-18 transform -rotate-90">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 72 72">
           {/* Main track ring */}
           <circle cx="36" cy="36" r={radius} stroke="#0d1116" strokeWidth="3" fill="transparent" />
           
@@ -37,11 +37,11 @@ function SVGDial({ percent, valueText, label, strokeColor, glowColor }) {
         </svg>
 
         {/* Value Text */}
-        <div className="absolute inset-0 flex items-center justify-center font-hud text-[9.5px] text-white font-bold group-hover:scale-105 transition-transform">
+        <div className="absolute inset-0 flex items-center justify-center font-hud text-[8px] sm:text-[9.5px] text-white font-bold group-hover:scale-105 transition-transform">
           {valueText || `${percent}%`}
         </div>
       </div>
-      <span className="font-tech text-[8px] sm:text-[9px] text-[#808a9d] group-hover:text-white transition-colors tracking-widest uppercase text-center block leading-tight">
+      <span className="font-tech text-[7px] sm:text-[8.5px] text-[#808a9d] group-hover:text-white transition-colors tracking-widest uppercase text-center block leading-tight px-0.5">
         {label}
       </span>
     </div>
@@ -131,11 +131,86 @@ function TelemetryWaveCanvas() {
       ctx.lineTo(scanX, canvas.height);
       ctx.stroke();
 
+      // Render 3D rotating wireframe globe on the right
+      const sphereCx = canvas.width - 45;
+      const sphereCy = canvas.height / 2;
+      const sphereR = 17;
+      const rotation = offset * 0.45;
+      const tilt = 0.35; // Tilt angle
+
+      ctx.strokeStyle = themeColor + '35'; // faint grid lines
+      ctx.lineWidth = 0.5;
+
+      // Draw latitude lines (horizontal circles)
+      const lats = [-Math.PI / 4, 0, Math.PI / 4];
+      lats.forEach(lat => {
+        ctx.beginPath();
+        const rLat = sphereR * Math.cos(lat);
+        const yLat = sphereR * Math.sin(lat);
+        
+        for (let i = 0; i <= 24; i++) {
+          const theta = (i * Math.PI) / 12;
+          const x3d = rLat * Math.cos(theta);
+          const z3d = rLat * Math.sin(theta);
+          
+          // Spin rotation around Y
+          const x1 = x3d * Math.cos(rotation) - z3d * Math.sin(rotation);
+          const z1 = x3d * Math.sin(rotation) + z3d * Math.cos(rotation);
+          
+          // Tilt rotation around X
+          const y2 = yLat * Math.cos(tilt) - z1 * Math.sin(tilt);
+          
+          const sx = sphereCx + x1;
+          const sy = sphereCy + y2;
+          
+          if (i === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+      });
+
+      // Draw longitude lines (vertical ellipses)
+      const longs = [0, Math.PI / 3, (2 * Math.PI) / 3];
+      longs.forEach(lon => {
+        ctx.beginPath();
+        for (let i = 0; i <= 24; i++) {
+          const theta = (i * Math.PI) / 12;
+          const x3d = sphereR * Math.cos(theta) * Math.cos(lon);
+          const y3d = sphereR * Math.sin(theta);
+          const z3d = sphereR * Math.cos(theta) * Math.sin(lon);
+          
+          const x1 = x3d * Math.cos(rotation) - z3d * Math.sin(rotation);
+          const z1 = x3d * Math.sin(rotation) + z3d * Math.cos(rotation);
+          const y2 = y3d * Math.cos(tilt) - z1 * Math.sin(tilt);
+          
+          const sx = sphereCx + x1;
+          const sy = sphereCy + y2;
+          
+          if (i === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+      });
+
+      // Draw globe border and radar target coordinates
+      ctx.strokeStyle = themeColor + '66';
+      ctx.beginPath();
+      ctx.arc(sphereCx, sphereCy, sphereR + 2, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = themeColor + '18';
+      ctx.beginPath();
+      ctx.moveTo(sphereCx - sphereR - 6, sphereCy);
+      ctx.lineTo(sphereCx + sphereR + 6, sphereCy);
+      ctx.moveTo(sphereCx, sphereCy - sphereR - 6);
+      ctx.lineTo(sphereCx, sphereCy + sphereR + 6);
+      ctx.stroke();
+
       ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.font = '7px Courier New';
       ctx.fillText(`FRQ: ${(54 + Math.sin(offset) * 1.5).toFixed(1)}Hz`, 6, 12);
       ctx.fillText(`SYS_LOAD: ${(68 + Math.cos(offset) * 3).toFixed(1)}%`, 6, 22);
-      ctx.fillText(`SIGNAL: LOCK`, canvas.width - 64, 12);
+      ctx.fillText(`SIGNAL: LOCK`, 6, 32);
 
       offset += 0.04;
       animationFrameId = requestAnimationFrame(draw);
@@ -153,6 +228,14 @@ function TelemetryWaveCanvas() {
 }
 
 export default function Hero({ aboutData }) {
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   const roles = [
     "Abhishek M Nair joined as React Developer",
     "Abhishek M Nair joined as Full Stack Developer",
@@ -209,6 +292,8 @@ export default function Hero({ aboutData }) {
           "  about    - Print biographical core specs",
           "  skills   - List all loaded programming skill items",
           "  projects - Print current technical builds catalog",
+          "  system   - Print active CPU/GPU and compiler telemetry",
+          "  matrix   - Toggle the full screen cascading hex stream",
           "  clear    - Clear console log stack"
         ]);
       } else if (cmd === 'about') {
@@ -238,6 +323,22 @@ export default function Hero({ aboutData }) {
           "  4. Plant Disease Detection [TensorFlow + Keras]",
           "  5. Safety Helmet Detection [YOLOv8 + CV]",
           "  6. Sentiment Analysis of Reviews [NLP + Scikit-Learn]"
+        ]);
+      } else if (cmd === 'system' || cmd === 'sys') {
+        setLogs(prev => [
+          ...prev,
+          "SYSTEM CORE PERFORMANCE METRICS:",
+          "  PING_LATENCY: 4ms",
+          "  CUDA_STATUS: ACTIVE [1 GPU]",
+          "  MEM_ALLOC:   1.46 GB / 8.00 GB",
+          "  INF_SPEED:   8.2ms (YOLOv8 & NLP)",
+          "  HUD_VERSION: v1.0.4 (Optimized)"
+        ]);
+      } else if (cmd === 'matrix' || cmd === 'rain') {
+        window.dispatchEvent(new CustomEvent('toggle-matrix'));
+        setLogs(prev => [
+          ...prev,
+          "MATRIX_MODE: Toggled falling code stream overlay."
         ]);
       } else if (cmd === 'clear') {
         setLogs([
@@ -321,11 +422,19 @@ export default function Hero({ aboutData }) {
         <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-7">
 
           {/* Diagnostic Tag */}
-          <div className="bg-[#0b0e14] border border-[#1b253b] px-3 py-1 flex items-center space-x-2">
-            <span className="w-1.5 h-1.5 bg-[#39ff14] rounded-full animate-blink" />
-            <span className="font-code text-[9px] sm:text-[10px] tracking-widest text-[#808a9d] uppercase">
-              STATUS: ONLINE // BOOT_SECTOR_LOADED
-            </span>
+          <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
+            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-3 py-1.5 flex items-center space-x-2 relative overflow-hidden group">
+              <span className="w-1.5 h-1.5 bg-[#39ff14] rounded-full animate-blink" />
+              <span className="font-code text-[9px] sm:text-[10px] font-bold tracking-widest text-slate-200 uppercase">
+                STATUS: ONLINE // BOOT_SECTOR_LOADED
+              </span>
+              <div className="absolute top-0 right-0 w-1 h-1 bg-[#ff007f]" />
+            </div>
+            
+            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-2.5 py-1.5 flex items-center space-x-1.5">
+              <span className="text-[#00f3ff] font-code text-[9px] sm:text-[10px]">LOC:</span>
+              <span className="text-[#808a9d] font-code text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">BLR_IND [12.97°N]</span>
+            </div>
           </div>
 
           {/* Large Name */}
@@ -349,7 +458,11 @@ export default function Hero({ aboutData }) {
           </p>
 
           {/* XP PROGRESS BAR REQUEST */}
-          <div className="w-full max-w-md bg-black/60 border border-slate-900 p-3 font-code text-left relative">
+          <motion.div 
+            whileHover={{ scale: 1.012 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-md bg-black/60 border border-slate-900 p-3 font-code text-left relative"
+          >
             <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#39ff14]" />
             <div className="flex justify-between text-[9px] text-[#ffaa00] mb-1.5 uppercase font-bold tracking-wider">
               <span>[ XP LEVEL: EXPERIENCE ]</span>
@@ -357,12 +470,18 @@ export default function Hero({ aboutData }) {
             </div>
             {/* Bar track */}
             <div className="w-full h-3.5 bg-[#10141c] border border-slate-800 p-[1px] relative">
-              <div className="h-full bg-gradient-to-r from-[#ffaa00] to-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.5)]" style={{ width: '25%' }} />
+              <motion.div 
+                initial={{ width: 0 }}
+                whileInView={{ width: '25%' }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.4, ease: "easeOut", delay: 0.35 }}
+                className="h-full bg-gradient-to-r from-[#ffaa00] to-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.5)]" 
+              />
               <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold tracking-widest uppercase">
                 6 Months (Intern)
               </span>
             </div>
-          </div>
+          </motion.div>
 
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center lg:justify-start max-w-sm pt-2">
             <button
@@ -447,7 +566,10 @@ export default function Hero({ aboutData }) {
         {/* Right Column: Telemetry Scanning Card & Server Log */}
         <div className="lg:col-span-5 flex flex-col space-y-6 items-center">
 
-          <div className="w-full max-w-sm cyber-card border border-[#1b253b] p-6 relative overflow-hidden scanner-container">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="w-full max-w-sm cyber-card-glow border border-[#1b253b] p-6 relative overflow-hidden scanner-container"
+          >
             <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
               <span className="font-hud text-[9px] text-[#00f3ff] tracking-widest uppercase">ACTIVE_ENGINE_DIALS</span>
               <span className="font-code text-[8px] text-[#ff007f]">SYS_TELEMETRY</span>
@@ -462,20 +584,20 @@ export default function Hero({ aboutData }) {
             <div className="grid grid-cols-3 gap-2">
               <SVGDial
                 percent={95}
-                label="AI & MLSpecial"
+                label="AI & ML"
                 strokeColor="#ff007f"
                 glowColor="rgba(255, 0, 127, 0.4)"
               />
               <SVGDial
                 percent={90}
-                label="Full StackEng"
+                label="Full Stack"
                 strokeColor="#39ff14"
                 glowColor="rgba(57, 255, 20, 0.4)"
               />
               <SVGDial
                 percent={100}
                 valueText="8.2ms"
-                label="ModelInf Speed"
+                label="Model Inf"
                 strokeColor="#00f3ff"
                 glowColor="rgba(0, 243, 255, 0.4)"
               />
@@ -488,7 +610,10 @@ export default function Hero({ aboutData }) {
           </div>
 
           {/* Scrolling System Console */}
-          <div className="w-full max-w-sm bg-black/95 border border-[#1b253b] p-4 flex flex-col h-56 shadow-[0_0_15px_rgba(57,255,20,0.05)]">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="w-full max-w-sm cyber-card-glow p-4 flex flex-col h-56 border border-[#1b253b]"
+          >
             <div className="border-b border-slate-800 pb-1 mb-2 flex items-center justify-between">
               <span className="font-hud text-[8px] text-[#ff007f] tracking-widest">🖥️ ENGINE_TELEMETRY_LOGS</span>
               <span className="w-1.5 h-1.5 bg-[#ff007f] rounded-full animate-blink" />

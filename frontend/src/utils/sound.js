@@ -1,5 +1,8 @@
 let audioCtx = null;
 let soundMuted = false;
+let ambientOsc1 = null;
+let ambientOsc2 = null;
+let ambientGain = null;
 
 const getAudioContext = () => {
   if (!audioCtx) {
@@ -13,8 +16,67 @@ const getAudioContext = () => {
   return audioCtx;
 };
 
+export const startAmbientHum = () => {
+  if (soundMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (ambientGain) return; // already active
+    
+    ambientGain = ctx.createGain();
+    ambientGain.gain.setValueAtTime(0.012, ctx.currentTime); // extremely quiet and subtle
+    
+    ambientOsc1 = ctx.createOscillator();
+    ambientOsc1.type = "sine";
+    ambientOsc1.frequency.setValueAtTime(55, ctx.currentTime); // Low 55Hz bass
+    
+    ambientOsc2 = ctx.createOscillator();
+    ambientOsc2.type = "triangle";
+    ambientOsc2.frequency.setValueAtTime(55.3, ctx.currentTime); // Phasing offset
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(90, ctx.currentTime); // Remove mids/highs for a deep hum
+    
+    ambientOsc1.connect(filter);
+    ambientOsc2.connect(filter);
+    filter.connect(ambientGain);
+    ambientGain.connect(ctx.destination);
+    
+    ambientOsc1.start();
+    ambientOsc2.start();
+  } catch (e) {
+    console.warn("AudioContext blocked or ambient hum failed to start:", e);
+  }
+};
+
+export const stopAmbientHum = () => {
+  try {
+    if (ambientOsc1) {
+      ambientOsc1.stop();
+      ambientOsc1.disconnect();
+      ambientOsc1 = null;
+    }
+    if (ambientOsc2) {
+      ambientOsc2.stop();
+      ambientOsc2.disconnect();
+      ambientOsc2 = null;
+    }
+    if (ambientGain) {
+      ambientGain.disconnect();
+      ambientGain = null;
+    }
+  } catch (e) {
+    // Ignore errors
+  }
+};
+
 export const toggleMute = () => {
   soundMuted = !soundMuted;
+  if (soundMuted) {
+    stopAmbientHum();
+  } else {
+    startAmbientHum();
+  }
   return soundMuted;
 };
 

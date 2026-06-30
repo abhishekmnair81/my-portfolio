@@ -81,6 +81,15 @@ function ProjectSchematic({ techStack = [] }) {
 
 export default function Projects({ projectsData, loading, error, loadDemoData }) {
   const [openSchematicId, setOpenSchematicId] = useState(null);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   if (loading) {
     return (
       <section id="projects" className="px-4 py-20 bg-[#070708] border-b border-[#1b253b]">
@@ -139,7 +148,8 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
             return (
               <div 
                 key={project.id} 
-                className="cyber-card border border-slate-900 bg-[#0b0e14]/70 p-5 flex flex-col justify-between relative overflow-hidden group"
+                onMouseMove={handleMouseMove}
+                className="cyber-card-glow border border-slate-900 p-5 flex flex-col justify-between relative overflow-hidden group"
               >
                 {/* Tech Bracket corners */}
                 <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#00f3ff] opacity-40 group-hover:opacity-100 transition-opacity" />

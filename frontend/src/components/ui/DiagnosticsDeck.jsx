@@ -221,6 +221,7 @@ export default function DiagnosticsDeck({ addAchievement }) {
         appendLog('  projects   - Scan projects directory and view builds.');
         appendLog('  system     - Check hardware specs, scan grid, or ping host.');
         appendLog('  hack       - Attempt to crack the neural firewall server.');
+        appendLog('  matrix     - Toggle visual falling matrix hex overlay.');
         appendLog('  clear      - Clear the console outputs.');
         break;
 
@@ -283,6 +284,12 @@ export default function DiagnosticsDeck({ addAchievement }) {
         appendLog('[WARNING] FIREWALL BYPASS CHALLENGE INITIALIZED.');
         appendLog(`[WARNING] Decrypt the scrambled core keyword: "${scrambled}"`);
         appendLog('[WARNING] Input your answer below (or type "exit" to abort):');
+        break;
+
+      case 'matrix':
+      case 'rain':
+        window.dispatchEvent(new CustomEvent('toggle-matrix'));
+        appendLog('[SYS] Falling matrix stream toggled.');
         break;
 
       default:
@@ -450,7 +457,7 @@ export default function DiagnosticsDeck({ addAchievement }) {
             </div>
 
             {/* Content Body Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-5 h-[340px] md:h-[260px] relative z-20">
+            <div className="grid grid-cols-1 md:grid-cols-5 h-[50vh] min-h-[220px] max-h-[340px] md:h-[260px] relative z-20">
               {/* Tab Selector (Mobile Only) */}
               <div className="flex md:hidden bg-black/40 border-b border-slate-900 text-center text-[10px]">
                 <button 

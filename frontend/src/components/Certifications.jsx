@@ -1,8 +1,17 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/sound';
 import DecryptedText from './ui/DecryptedText';
 
 export default function Certifications({ certificationsData, loading, error, loadDemoData }) {
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   const defaultCertifications = [
     {
       id: 1,
@@ -48,13 +57,17 @@ export default function Certifications({ certificationsData, loading, error, loa
           <p className="font-sans text-xs text-[#808a9d] mt-2">Decrypted system certifications and active learning credentials</p>
         </div>
 
-        {/* 3-Column Cyber Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {certifications.map((cert) => (
-            <div 
+          {certifications.map((cert, idx) => (
+            <motion.div 
               key={cert.id}
               onClick={playClickSound}
-              className="bg-[#0d1118]/70 border border-[#1b253b] p-5 shadow-2xl relative hover:border-[#00f3ff] transition-all duration-300 cursor-pointer group overflow-hidden"
+              onMouseMove={handleMouseMove}
+              initial={{ opacity: 0, y: 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: idx * 0.15 }}
+              className="cyber-card-glow border border-[#1b253b] p-5 shadow-2xl relative hover:border-[#00f3ff] transition-all duration-300 cursor-pointer group overflow-hidden"
             >
               {/* Holographic Watermark Badge */}
               <div className="absolute -right-3 -bottom-3 w-16 h-16 opacity-[0.03] group-hover:opacity-15 group-hover:scale-115 group-hover:rotate-12 transition-all duration-500 pointer-events-none text-[#00f3ff]">
@@ -90,7 +103,7 @@ export default function Certifications({ certificationsData, loading, error, loa
 
               {/* Decorative scanline indicator */}
               <div className="absolute bottom-2 right-2 w-1.5 h-1.5 bg-[#1b253b] group-hover:bg-[#00f3ff] transition-colors" />
-            </div>
+            </motion.div>
           ))}
         </div>
 

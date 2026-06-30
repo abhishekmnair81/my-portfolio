@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-export default function DecryptedText({ text, speed = 30, className = "" }) {
+export default function DecryptedText({ 
+  text, 
+  speed = 30, 
+  className = "", 
+  useHover = true, 
+  animateOnView = true 
+}) {
   const [display, setDisplay] = useState(text);
-  const [isHovered, setIsHovered] = useState(false);
+  const [triggerCount, setTriggerCount] = useState(0);
+  const elementRef = useRef(null);
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!_+=-";
 
-  useEffect(() => {
-    if (!isHovered) {
-      setDisplay(text);
-      return;
-    }
+  // Trigger scramble resolution
+  const triggerScramble = () => {
+    setTriggerCount(prev => prev + 1);
+  };
 
+  // Scramble and resolve text whenever triggerCount changes
+  useEffect(() => {
     let iterations = 0;
     const interval = setInterval(() => {
       setDisplay(
@@ -33,15 +41,36 @@ export default function DecryptedText({ text, speed = 30, className = "" }) {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [isHovered, text, speed]);
+  }, [triggerCount, text, speed]);
+
+  // Trigger once on view entrance
+  useEffect(() => {
+    if (!animateOnView || !elementRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          triggerScramble();
+          // Unobserve after triggering once to prevent infinite loops on scrolling
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+    );
+
+    observer.observe(elementRef.current);
+    return () => observer.disconnect();
+  }, [text, animateOnView]);
 
   return (
     <span 
-      className={`${className} cursor-pointer transition-all duration-200`} 
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      ref={elementRef}
+      className={`${className} cursor-pointer select-none transition-all duration-200`} 
+      onMouseEnter={() => { if (useHover) triggerScramble(); }}
+      onClick={triggerScramble}
     >
       {display}
     </span>
   );
 }
+

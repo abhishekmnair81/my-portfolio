@@ -4,6 +4,14 @@ import { playClickSound } from '../utils/sound';
 import DecryptedText from './ui/DecryptedText';
 
 export default function Skills({ skillsData, loading, error, loadDemoData }) {
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   if (loading) {
     return (
       <section id="skills" className="px-4 py-20 bg-[#08090c] border-b border-[#1b253b]">
@@ -123,7 +131,8 @@ export default function Skills({ skillsData, loading, error, loadDemoData }) {
           {renderCategories.map((cat, idx) => (
             <div 
               key={idx} 
-              className={`cyber-card border border-slate-900 p-5 relative overflow-hidden group/card transition-all duration-300 hover:border-slate-800`}
+              onMouseMove={handleMouseMove}
+              className={`cyber-card-glow border border-slate-900 p-5 relative overflow-hidden group/card transition-all duration-300 hover:border-slate-800`}
               style={{ boxShadow: `inset 0 0 10px ${cat.glowColor}` }}
             >
               {/* Dynamic category grid pattern on hover */}
@@ -156,13 +165,18 @@ export default function Skills({ skillsData, loading, error, loadDemoData }) {
                     onClick={playClickSound}
                   >
                     {/* Label & Level */}
-                    <div className="flex justify-between items-center text-[11px] font-hud tracking-wide mb-1 text-slate-300 group-hover:text-white">
+                    <div className="flex justify-between items-center text-[11.5px] font-hud tracking-wide mb-0.5 text-slate-300 group-hover:text-white">
                       <span>{skill.name}</span>
                       <span className="font-code text-[#ffaa00]">{skill.level}%</span>
                     </div>
 
+                    {/* Inline Description (mobile-friendly, details-rich) */}
+                    <p className="text-[10px] text-[#808a9d] font-sans mb-1.5 leading-relaxed group-hover:text-slate-300 transition-colors">
+                      {skill.desc}
+                    </p>
+
                     {/* Progress Slider Track with sweep animation */}
-                    <div className="w-full h-2 bg-black border border-slate-850 p-[1px] relative overflow-hidden">
+                    <div className="w-full h-1.5 bg-black border border-slate-850 p-[1px] relative overflow-hidden">
                       <div 
                         className="h-full transition-all duration-500 relative"
                         style={{ 
@@ -177,12 +191,6 @@ export default function Skills({ skillsData, loading, error, loadDemoData }) {
                           style={{ animationDelay: `${sIdx * 0.25}s` }}
                         />
                       </div>
-                    </div>
-
-                    {/* Info Tooltip Hover Card */}
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-[#10141c] border border-slate-700 p-2.5 z-20 text-[10px] text-slate-300 font-sans shadow-2xl max-w-xs pointer-events-none w-56">
-                      <p className="font-bold text-white font-hud mb-0.5">{skill.name}</p>
-                      <p className="leading-tight text-[#808a9d]">{skill.desc}</p>
                     </div>
                   </div>
                 ))}

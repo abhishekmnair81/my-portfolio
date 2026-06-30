@@ -268,7 +268,7 @@ export default function About({ aboutData, loading, error, loadDemoData }) {
               
               <div className="font-hud text-[10px] text-[#ffaa00] mb-4 tracking-widest uppercase flex justify-between items-center border-b border-slate-900 pb-2">
                 <span>[ CAPABILITIES RADAR MATRIX ]</span>
-                <span className="text-[8px] text-[#808a9d] lowercase font-code">hover sectors to decode telemetry</span>
+                <span className="text-[8px] text-[#808a9d] lowercase font-code">hover or tap sectors to decode telemetry</span>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -368,6 +368,7 @@ export default function About({ aboutData, loading, error, loadDemoData }) {
                           strokeWidth="1"
                           className="cursor-pointer transition-all duration-150"
                           onMouseEnter={() => { playClickSound(); setHoveredAttr(i); }}
+                          onClick={() => { playClickSound(); setHoveredAttr(i); }}
                           style={{ filter: `drop-shadow(0 0 3px ${attr.color})` }}
                         />
                       );
@@ -392,12 +393,14 @@ export default function About({ aboutData, loading, error, loadDemoData }) {
                             isSelected ? 'fill-[#00f3ff]' : 'fill-[#808a9d] hover:fill-white'
                           }`}
                           onMouseEnter={() => { playClickSound(); setHoveredAttr(i); }}
+                          onClick={() => { playClickSound(); setHoveredAttr(i); }}
                         >
                           {shortNames[i]}
                         </text>
                       );
                     })}
                   </svg>
+
 
                 </div>
 

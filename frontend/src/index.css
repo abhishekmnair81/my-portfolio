@@ -215,3 +215,86 @@ h1, h2, h3, h4, h5, h6 {
 .animate-blink {
   animation: blink 1s infinite;
 }
+
+/* Glassmorphic Cyber Cards with Mouse-Follower Glow */
+.cyber-card-glow {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Mouse-following border lighting */
+.cyber-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.2px; /* Border thickness */
+  background: radial-gradient(
+    180px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    var(--color-cyan),
+    transparent 55%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 5;
+}
+
+/* Mouse-following background illumination */
+.cyber-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    220px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    color-mix(in srgb, var(--color-cyan) 6%, transparent),
+    transparent 65%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.cyber-card-glow:hover::before,
+.cyber-card-glow:hover::after {
+  opacity: 1;
+}
+
+/* CRT screen scanline + flicker effect */
+.crt-flicker {
+  animation: crt-flicker-anim 0.2s infinite;
+}
+
+@keyframes crt-flicker-anim {
+  0% { opacity: 0.992; }
+  50% { opacity: 0.982; }
+  100% { opacity: 0.992; }
+}
+
+.crt-chromatic {
+  text-shadow: 0.7px 0 0 rgba(255, 0, 127, 0.35), -0.7px 0 0 rgba(0, 243, 255, 0.35);
+}
+
+.glitch-shake {
+  animation: glitch-shake-anim 0.25s cubic-bezier(.25,.46,.45,.94) both;
+}
+
+@keyframes glitch-shake-anim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+

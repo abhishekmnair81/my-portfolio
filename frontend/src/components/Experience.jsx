@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import LoadingSkeleton from './ui/LoadingSkeleton';
 import DecryptedText from './ui/DecryptedText';
 
@@ -77,8 +78,12 @@ export default function Experience({ experienceData, loading, error, loadDemoDat
               const borderGlow = isWork ? 'hover:border-[#ffaa00] hover:shadow-[0_0_15px_rgba(255,170,0,0.15)]' : 'hover:border-[#00f3ff] hover:shadow-[0_0_15px_rgba(0,243,255,0.15)]';
               
               return (
-                <div 
+                <motion.div 
                   key={item.id} 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   className={`relative flex flex-col lg:flex-row items-start group ${
                     isEven ? 'lg:justify-start' : 'lg:justify-end'
                   }`}
@@ -147,7 +152,7 @@ export default function Experience({ experienceData, loading, error, loadDemoDat
 
                   </div>
 
-                </div>
+                </motion.div>
               );
             })}
 
