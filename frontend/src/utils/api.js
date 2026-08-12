@@ -50,7 +50,6 @@ export const MOCK_SKILLS = [
   { id: 9, name: "Python", category: "backend", proficiency: 95, is_hotbar: true },
   { id: 10, name: "Django", category: "backend", proficiency: 92, is_hotbar: true },
   { id: 11, name: "Django REST Framework", category: "backend", proficiency: 90, is_hotbar: true },
-  { id: 12, name: "Flask", category: "backend", proficiency: 80, is_hotbar: false },
   { id: 13, name: "REST APIs", category: "backend", proficiency: 90, is_hotbar: false },
   { id: 14, name: "Authentication (JWT)", category: "backend", proficiency: 85, is_hotbar: false },
 
@@ -69,8 +68,6 @@ export const MOCK_SKILLS = [
   { id: 24, name: "NumPy", category: "aiml", proficiency: 90, is_hotbar: false },
   { id: 25, name: "Pandas", category: "aiml", proficiency: 92, is_hotbar: false },
   { id: 26, name: "Scikit-Learn", category: "aiml", proficiency: 88, is_hotbar: false },
-  { id: 27, name: "TensorFlow", category: "aiml", proficiency: 80, is_hotbar: false },
-  { id: 28, name: "Keras", category: "aiml", proficiency: 80, is_hotbar: false },
   { id: 29, name: "PyTorch", category: "aiml", proficiency: 75, is_hotbar: false },
   { id: 30, name: "Matplotlib", category: "aiml", proficiency: 85, is_hotbar: false },
   { id: 31, name: "Seaborn", category: "aiml", proficiency: 85, is_hotbar: false },
@@ -112,7 +109,7 @@ export const MOCK_PROJECTS = [
     id: 4,
     title: "Plant Disease Detection",
     description: "Deep learning model that detects plant diseases from leaf images using image classification techniques.",
-    tech_stack: ["Python", "Deep Learning", "TensorFlow", "Keras", "Jupyter Notebook"],
+    tech_stack: ["Python", "Deep Learning", "PyTorch", "Jupyter Notebook"],
     github_url: "https://github.com/abhishekmnair81/Plant-Disease-Detection",
     live_url: null, // Hidden
     is_featured: false,

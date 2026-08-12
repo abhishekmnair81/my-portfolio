@@ -14,7 +14,7 @@ function ProjectSchematic({ techStack = [] }) {
     type = 'web';
     nodes = ['UI_CLIENT', 'API_GATEWAY', 'DB_DATA'];
     color = '#00f3ff';
-  } else if (tech.includes('yolo') || tech.includes('opencv') || tech.includes('cv') || tech.includes('keras') || tech.includes('tensorflow') || tech.includes('vision')) {
+  } else if (tech.includes('yolo') || tech.includes('opencv') || tech.includes('cv') || tech.includes('pytorch') || tech.includes('vision')) {
     type = 'cv';
     nodes = ['FRAME_FEED', 'YOLO_INFERENCE', 'HUD_OVERLAY'];
     color = '#39ff14';
@@ -136,7 +136,7 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
       : (project.technologies ? project.technologies.toLowerCase() : '');
       
     if (activeFilter === 'AI') {
-      return tech.includes('ml') || tech.includes('ai') || tech.includes('yolo') || tech.includes('vision') || tech.includes('nlp') || tech.includes('learning') || tech.includes('tensorflow') || tech.includes('keras');
+      return tech.includes('ml') || tech.includes('ai') || tech.includes('yolo') || tech.includes('vision') || tech.includes('nlp') || tech.includes('learning') || tech.includes('pytorch');
     }
     if (activeFilter === 'FULLSTACK') {
       return tech.includes('react') || tech.includes('django') || tech.includes('api') || tech.includes('rest') || tech.includes('sql') || tech.includes('postgres') || tech.includes('js') || tech.includes('javascript') || tech.includes('tailwind') || tech.includes('css') || tech.includes('html');
@@ -167,7 +167,7 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
                 ? p.tech_stack.join(', ').toLowerCase() 
                 : (p.technologies ? p.technologies.toLowerCase() : '');
               if (f.id === 'AI') {
-                return tech.includes('ml') || tech.includes('ai') || tech.includes('yolo') || tech.includes('vision') || tech.includes('nlp') || tech.includes('learning') || tech.includes('tensorflow') || tech.includes('keras');
+                return tech.includes('ml') || tech.includes('ai') || tech.includes('yolo') || tech.includes('vision') || tech.includes('nlp') || tech.includes('learning') || tech.includes('pytorch');
               }
               if (f.id === 'FULLSTACK') {
                 return tech.includes('react') || tech.includes('django') || tech.includes('api') || tech.includes('rest') || tech.includes('sql') || tech.includes('postgres') || tech.includes('js') || tech.includes('javascript') || tech.includes('tailwind') || tech.includes('css') || tech.includes('html');

@@ -309,7 +309,7 @@ export default function Hero({ aboutData }) {
           ...prev,
           "PRIMARY STOCK CORES:",
           "  [Frontend] React.js | JavaScript | HTML5 & CSS3 | Bootstrap",
-          "  [Backend]  Python | Django | Django REST Framework | Flask",
+          "  [Backend]  Python | Django | Django REST Framework",
           "  [Database] PostgreSQL | SQLite | MySQL",
           "  [AI & ML]  Machine Learning | Deep Learning | NLP | PyTorch"
         ]);
@@ -320,7 +320,7 @@ export default function Hero({ aboutData }) {
           "  1. AI-Integrated Telemedicine System [Django + React]",
           "  2. LearnNova — E-Learning Web App [React + REST API]",
           "  3. Credit Card Fraud Detection [Python + ML]",
-          "  4. Plant Disease Detection [TensorFlow + Keras]",
+          "  4. Plant Disease Detection [Deep Learning]",
           "  5. Safety Helmet Detection [YOLOv8 + CV]",
           "  6. Sentiment Analysis of Reviews [NLP + Scikit-Learn]"
         ]);
