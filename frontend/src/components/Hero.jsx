@@ -3,6 +3,127 @@ import { motion } from 'framer-motion';
 import useTypewriter from '../hooks/useTypewriter';
 import { playClickSound, playLevelUpSound } from '../utils/sound';
 
+// Interactive Particle Constellation Canvas with mouse physics
+function ParticleConstellationCanvas() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    const mouse = { x: -1000, y: -1000, radius: 160 };
+
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
+    const particleCount = Math.min(Math.floor(width / 18), 70);
+    const particles = [];
+
+    const colors = ['#00f3ff', '#ff007f', '#39ff14', '#ffffff'];
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        radius: Math.random() * 2 + 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: Math.random() * 0.6 + 0.3
+      });
+    }
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw connecting lines
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 130) {
+            const lineAlpha = (1 - dist / 130) * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 243, 255, ${lineAlpha})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw & update particles
+      for (let p of particles) {
+        // Mouse repelling physics
+        const mdx = p.x - mouse.x;
+        const mdy = p.y - mouse.y;
+        const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+        if (mdist < mouse.radius) {
+          const angle = Math.atan2(mdy, mdx);
+          const force = (mouse.radius - mdist) / mouse.radius;
+          p.x += Math.cos(angle) * force * 3;
+          p.y += Math.sin(angle) * force * 3;
+        }
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-[1]" />;
+}
+
 function SVGDial({ percent, valueText, label, strokeColor, glowColor }) {
   const radius = 30;
   const strokeDash = 2 * Math.PI * radius;
@@ -11,16 +132,12 @@ function SVGDial({ percent, valueText, label, strokeColor, glowColor }) {
   return (
     <div className="flex flex-col items-center space-y-1.5 group">
       <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
-        {/* Outer spinning dash guide */}
         <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '14s' }} viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="37" stroke={`${strokeColor}22`} strokeWidth="0.8" strokeDasharray="5,6" fill="none" />
         </svg>
 
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 72 72">
-          {/* Main track ring */}
           <circle cx="36" cy="36" r={radius} stroke="#0d1116" strokeWidth="3" fill="transparent" />
-
-          {/* Progress arc */}
           <motion.circle
             cx="36"
             cy="36"
@@ -36,7 +153,6 @@ function SVGDial({ percent, valueText, label, strokeColor, glowColor }) {
           />
         </svg>
 
-        {/* Value Text */}
         <div className="absolute inset-0 flex items-center justify-center font-hud text-[8px] sm:text-[9.5px] text-white font-bold group-hover:scale-105 transition-transform">
           {valueText || `${percent}%`}
         </div>
@@ -55,185 +171,92 @@ function TelemetryWaveCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let animationFrameId;
-    let offset = 0;
+    let animId;
+    let phase = 0;
 
-    const resize = () => {
-      canvas.width = canvas.parentElement.clientWidth || 300;
-      canvas.height = canvas.parentElement.clientHeight || 64;
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    const render = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const width = canvas.width;
+      const height = canvas.height;
 
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, width, height);
 
-      const themeColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-cyan')
-        .trim() || '#00f3ff';
-
-      // Grid mesh background
-      ctx.strokeStyle = '#10141c';
-      ctx.lineWidth = 0.5;
-      const gridSize = 10;
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < width; x += 15) {
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
+        ctx.lineTo(x, height);
       }
-      for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.beginPath();
+      for (let y = 0; y < height; y += 15) {
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2);
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.lineWidth = 1.2;
-      ctx.strokeStyle = themeColor;
-      ctx.shadowColor = themeColor;
-      ctx.shadowBlur = 3;
-
-      for (let x = 0; x < canvas.width; x++) {
-        const sine = Math.sin(x * 0.055 + offset);
-        let spike = 0;
-        const period = (x + offset * 8) % 150;
-        if (period > 115 && period < 128) {
-          const t = (period - 115) / 13;
-          spike = Math.sin(t * Math.PI) * 16;
-        } else if (period >= 128 && period < 136) {
-          const t = (period - 128) / 8;
-          spike = -Math.sin(t * Math.PI) * 8;
-        }
-
-        const y = canvas.height / 2 + sine * 3.5 + spike;
-        if (x === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+        ctx.lineTo(width, y);
       }
       ctx.stroke();
-      ctx.shadowBlur = 0;
 
-      // scanbar line
-      const scanX = (offset * 90) % canvas.width;
-      ctx.strokeStyle = 'rgba(255, 0, 127, 0.4)';
       ctx.beginPath();
-      ctx.moveTo(scanX, 0);
-      ctx.lineTo(scanX, canvas.height);
+      ctx.strokeStyle = '#00f3ff';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#00f3ff';
+      ctx.shadowBlur = 8;
+
+      for (let x = 0; x <= width; x += 3) {
+        const y = height / 2 + Math.sin(x * 0.05 + phase) * 12 * Math.sin(x * 0.015);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.stroke();
 
-      // Render 3D rotating wireframe globe on the right
-      const sphereCx = canvas.width - 45;
-      const sphereCy = canvas.height / 2;
-      const sphereR = 17;
-      const rotation = offset * 0.45;
-      const tilt = 0.35; // Tilt angle
-
-      ctx.strokeStyle = themeColor + '35'; // faint grid lines
-      ctx.lineWidth = 0.5;
-
-      // Draw latitude lines (horizontal circles)
-      const lats = [-Math.PI / 4, 0, Math.PI / 4];
-      lats.forEach(lat => {
-        ctx.beginPath();
-        const rLat = sphereR * Math.cos(lat);
-        const yLat = sphereR * Math.sin(lat);
-
-        for (let i = 0; i <= 24; i++) {
-          const theta = (i * Math.PI) / 12;
-          const x3d = rLat * Math.cos(theta);
-          const z3d = rLat * Math.sin(theta);
-
-          // Spin rotation around Y
-          const x1 = x3d * Math.cos(rotation) - z3d * Math.sin(rotation);
-          const z1 = x3d * Math.sin(rotation) + z3d * Math.cos(rotation);
-
-          // Tilt rotation around X
-          const y2 = yLat * Math.cos(tilt) - z1 * Math.sin(tilt);
-
-          const sx = sphereCx + x1;
-          const sy = sphereCy + y2;
-
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        }
-        ctx.stroke();
-      });
-
-      // Draw longitude lines (vertical ellipses)
-      const longs = [0, Math.PI / 3, (2 * Math.PI) / 3];
-      longs.forEach(lon => {
-        ctx.beginPath();
-        for (let i = 0; i <= 24; i++) {
-          const theta = (i * Math.PI) / 12;
-          const x3d = sphereR * Math.cos(theta) * Math.cos(lon);
-          const y3d = sphereR * Math.sin(theta);
-          const z3d = sphereR * Math.cos(theta) * Math.sin(lon);
-
-          const x1 = x3d * Math.cos(rotation) - z3d * Math.sin(rotation);
-          const z1 = x3d * Math.sin(rotation) + z3d * Math.cos(rotation);
-          const y2 = y3d * Math.cos(tilt) - z1 * Math.sin(tilt);
-
-          const sx = sphereCx + x1;
-          const sy = sphereCy + y2;
-
-          if (i === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
-        }
-        ctx.stroke();
-      });
-
-      // Draw globe border and radar target coordinates
-      ctx.strokeStyle = themeColor + '66';
       ctx.beginPath();
-      ctx.arc(sphereCx, sphereCy, sphereR + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff007f';
+      ctx.lineWidth = 1;
+      ctx.shadowColor = '#ff007f';
+      ctx.shadowBlur = 6;
+
+      for (let x = 0; x <= width; x += 4) {
+        const y = height / 2 + Math.cos(x * 0.04 - phase * 1.2) * 8;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.stroke();
 
-      ctx.strokeStyle = themeColor + '18';
-      ctx.beginPath();
-      ctx.moveTo(sphereCx - sphereR - 6, sphereCy);
-      ctx.lineTo(sphereCx + sphereR + 6, sphereCy);
-      ctx.moveTo(sphereCx, sphereCy - sphereR - 6);
-      ctx.lineTo(sphereCx, sphereCy + sphereR + 6);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.font = '7px Courier New';
-      ctx.fillText(`FRQ: ${(54 + Math.sin(offset) * 1.5).toFixed(1)}Hz`, 6, 12);
-      ctx.fillText(`SYS_LOAD: ${(68 + Math.cos(offset) * 3).toFixed(1)}%`, 6, 22);
-      ctx.fillText(`SIGNAL: LOCK`, 6, 32);
-
-      offset += 0.04;
-      animationFrameId = requestAnimationFrame(draw);
+      phase += 0.06;
+      animId = requestAnimationFrame(render);
     };
 
-    draw();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationFrameId);
-    };
+    render();
+    return () => cancelAnimationFrame(animId);
   }, []);
 
   return <canvas ref={canvasRef} className="w-full h-full block" />;
 }
 
 export default function Hero({ aboutData }) {
-  const handleMouseMove = (e) => {
+  // 3D Tilt Card state
+  const [tiltStyle, setTiltStyle] = useState({ transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)' });
+
+  const handleCardMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -12;
+    const rotateY = ((x - centerX) / centerX) * 12;
+
     e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
     e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+
+    setTiltStyle({
+      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
+    });
+  };
+
+  const handleCardMouseLeave = (e) => {
+    setTiltStyle({
+      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
+    });
   };
 
   const roles = [
@@ -252,7 +275,6 @@ export default function Hero({ aboutData }) {
   const instagram = aboutData?.instagram || "https://instagram.com/abhishek__muralidharan";
   const twitter = aboutData?.twitter || "https://x.com/abhishekm_nair";
 
-  // System status codes
   const [logs, setLogs] = useState([
     "SYS_INIT: Accessing DeepMind computing core...",
     "COGNITIVE: Initializing neural network parameters...",
@@ -264,7 +286,6 @@ export default function Hero({ aboutData }) {
   const consoleContainerRef = useRef(null);
   const [commandInput, setCommandInput] = useState('');
 
-  // Auto-scroll logs internally without pulling the parent window viewport
   useEffect(() => {
     if (consoleContainerRef.current) {
       consoleContainerRef.current.scrollTop = consoleContainerRef.current.scrollHeight;
@@ -278,7 +299,6 @@ export default function Hero({ aboutData }) {
 
     playClickSound();
 
-    // Add command to log
     setLogs(prev => [...prev, `guest@amn-hud:~$ ${commandInput}`]);
     setCommandInput('');
 
@@ -354,7 +374,6 @@ export default function Hero({ aboutData }) {
     }, 150);
   };
 
-  // Terminal logging ticks
   useEffect(() => {
     const messages = [
       "DIAGNOSTIC: Ping check complete. Client response latency: 4ms",
@@ -393,10 +412,9 @@ export default function Hero({ aboutData }) {
     playLevelUpSound();
     setDownloading(true);
 
-    // Download static PDF resume from public folder
     const element = document.createElement("a");
-    element.href = "/Abhishek_M_Nair_Resume.pdf";
-    element.download = "Abhishek_M_Nair_Resume.pdf";
+    element.href = "/Abhishek M Nair Resume.pdf";
+    element.download = "Abhishek M Nair Resume.pdf";
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -412,86 +430,127 @@ export default function Hero({ aboutData }) {
       id="hero"
       className="relative min-h-screen flex flex-col justify-center items-center px-4 pt-28 pb-20 bg-cyber-grid scanlines overflow-hidden border-b border-[#1b253b]"
     >
-      {/* Background glowing orbs */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-[#00f3ff]/5 rounded-full filter blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#ff007f]/5 rounded-full filter blur-[90px] pointer-events-none" />
+      {/* Interactive Constellation Canvas */}
+      <ParticleConstellationCanvas />
+
+      {/* Floating ambient glowing spheres */}
+      <div className="absolute top-1/4 left-[15%] w-80 h-80 bg-[#00f3ff]/8 rounded-full filter blur-[100px] pointer-events-none animate-float-orb z-[1]" />
+      <div className="absolute bottom-1/4 right-[10%] w-96 h-96 bg-[#ff007f]/7 rounded-full filter blur-[110px] pointer-events-none animate-float-orb-slow z-[1]" />
+      <div className="absolute top-[60%] left-[5%] w-48 h-48 bg-[#39ff14]/5 rounded-full filter blur-[80px] pointer-events-none animate-float-orb z-[1]" style={{ animationDelay: '3s' }} />
+
+      {/* Laser line sweep */}
+      <div className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#00f3ff]/30 to-transparent pointer-events-none animate-scanline-sweep z-[3]" />
+
+      {/* Corner borders */}
+      <div className="absolute top-24 left-4 w-16 h-16 border-t border-l border-[#00f3ff]/30 pointer-events-none" />
+      <div className="absolute top-24 right-4 w-16 h-16 border-t border-r border-[#ff007f]/30 pointer-events-none" />
+      <div className="absolute bottom-4 left-4 w-12 h-12 border-b border-l border-[#00f3ff]/20 pointer-events-none" />
+      <div className="absolute bottom-4 right-4 w-12 h-12 border-b border-r border-[#ff007f]/20 pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
-        {/* Left Column: Introductions */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-7">
-
-          {/* Diagnostic Tag */}
-          <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-3 py-1.5 flex items-center space-x-2 relative overflow-hidden group">
-              <span className="w-1.5 h-1.5 bg-[#39ff14] rounded-full animate-blink" />
-              <span className="font-code text-[9px] sm:text-[10px] font-bold tracking-widest text-slate-200 uppercase">
-                STATUS: ONLINE // BOOT_SECTOR_LOADED
+        {/* Left Column: Bio & Intro */}
+        <motion.div
+          className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-7"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.1 } }
+          }}
+        >
+          {/* Glowing Status badge */}
+          <motion.div
+            className="flex flex-wrap gap-2 justify-center lg:justify-start"
+            variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+          >
+            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-3.5 py-1.5 flex items-center space-x-2 relative overflow-hidden group animate-neon-pulse shadow-[0_0_15px_rgba(57,255,20,0.15)]">
+              <span className="w-2 h-2 bg-[#39ff14] rounded-full animate-ping" />
+              <span className="font-code text-[9.5px] sm:text-[10.5px] font-bold tracking-widest text-slate-200 uppercase">
+                STATUS: ONLINE // READY_FOR_HIRE
               </span>
-              <div className="absolute top-0 right-0 w-1 h-1 bg-[#ff007f]" />
+              <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ff007f]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00f3ff]/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
             </div>
-
-            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-2.5 py-1.5 flex items-center space-x-1.5">
-              <span className="text-[#00f3ff] font-code text-[9px] sm:text-[10px]">LOC:</span>
-              <span className="text-[#808a9d] font-code text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">BLR_IND [12.97°N]</span>
+            <div className="bg-[#0b0e14]/95 border border-[#1b253b] px-3 py-1.5 flex items-center space-x-1.5">
+              <span className="text-[#00f3ff] font-code text-[9.5px] sm:text-[10.5px]">LOC:</span>
+              <span className="text-[#808a9d] font-code text-[9.5px] sm:text-[10.5px] font-bold uppercase tracking-wider">BLR_IND [12.97°N]</span>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Large Name */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl text-white font-black tracking-wider leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f3ff] via-white to-[#ff007f]">
+          {/* Large Animated Title */}
+          <motion.h1
+            className="text-3xl sm:text-5xl lg:text-6xl text-white font-black tracking-wider leading-none"
+            variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } } }}
+          >
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f3ff] via-white to-[#ff007f] animate-glitch-flicker drop-shadow-[0_0_25px_rgba(0,243,255,0.3)]">
               {name}
             </span>
-          </h1>
+          </motion.h1>
 
-          {/* Typewriter role (joined server logs) */}
-          <div className="h-6 flex items-center justify-center lg:justify-start">
+          {/* Futuristic divider line */}
+          <motion.div
+            className="flex items-center gap-3 w-full max-w-md justify-center lg:justify-start"
+            variants={{ hidden: { opacity: 0, scaleX: 0 }, visible: { opacity: 1, scaleX: 1, transition: { duration: 0.6, delay: 0.1 } } }}
+            style={{ transformOrigin: 'left' }}
+          >
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-[#00f3ff] to-transparent" />
+            <span className="font-code text-[8.5px] text-[#00f3ff] font-bold tracking-[0.3em] uppercase">AI · FULL STACK · ML</span>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-[#ff007f] to-transparent" />
+          </motion.div>
+
+          {/* Typewriter role */}
+          <motion.div
+            className="h-6 flex items-center justify-center lg:justify-start"
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4 } } }}
+          >
             <span className="font-code text-xs sm:text-sm text-[#ffaa00] font-bold">
               &gt;&gt; {typedRole}
-              <span className="animate-blink">|</span>
+              <span className="animate-cursor">|</span>
             </span>
-          </div>
+          </motion.div>
 
           {/* Tagline */}
-          <p className="font-sans text-sm sm:text-base text-[#808a9d] max-w-md leading-relaxed">
-            {tagline}
-          </p>
-
-
-          {/* XP PROGRESS BAR REQUEST */}
-          <motion.div
-            whileHover={{ scale: 1.012 }}
-            transition={{ duration: 0.2 }}
-            className="w-full max-w-md bg-black/60 border border-slate-900 p-3 font-code text-left relative"
+          <motion.p
+            className="font-sans text-sm sm:text-base text-[#808a9d] max-w-md leading-relaxed"
+            variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
           >
+            {tagline}
+          </motion.p>
+
+          {/* Experience Progress Bar */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+            whileHover={{ scale: 1.015 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-md bg-black/70 border border-[#1b253b] hover:border-[#00f3ff]/50 p-3.5 font-code text-left relative overflow-hidden group shadow-xl transition-all duration-300"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00f3ff]/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
             <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#39ff14]" />
-            <div className="flex justify-between text-[9px] text-[#ffaa00] mb-1.5 uppercase font-bold tracking-wider">
+            <div className="flex justify-between text-[9.5px] text-[#ffaa00] mb-1.5 uppercase font-bold tracking-wider">
               <span>[ XP LEVEL: EXPERIENCE ]</span>
               <span>6 Months XP</span>
             </div>
-            {/* Bar track */}
             <div className="w-full h-3.5 bg-[#10141c] border border-slate-800 p-[1px] relative">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: '25%' }}
                 viewport={{ once: true }}
-                transition={{ duration: 1.4, ease: "easeOut", delay: 0.35 }}
-                className="h-full bg-gradient-to-r from-[#ffaa00] to-[#39ff14] shadow-[0_0_8px_rgba(57,255,20,0.5)]"
+                transition={{ duration: 1.6, ease: "easeOut", delay: 0.5 }}
+                className="h-full bg-gradient-to-r from-[#ffaa00] to-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.6)]"
               />
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-bold tracking-widest uppercase">
+              <span className="absolute inset-0 flex items-center justify-center text-[8.5px] text-white font-bold tracking-widest uppercase">
                 6 Months (Intern)
               </span>
             </div>
-
-            {/* Sub-channel telemetry readouts */}
-            <div className="mt-3 pt-2.5 border-t border-slate-950 grid grid-cols-2 gap-3 text-[7.5px] text-[#808a9d]">
+            <div className="mt-3 pt-2.5 border-t border-slate-900 grid grid-cols-2 gap-3 text-[8px] text-[#808a9d]">
               <div className="space-y-1">
                 <div className="flex justify-between font-bold">
                   <span>CH_A // AI_COGNITIVE</span>
                   <span className="text-[#ff007f]">85%</span>
                 </div>
                 <div className="h-1 bg-[#10141c] rounded-none overflow-hidden">
-                  <div className="h-full bg-[#ff007f] shadow-[0_0_4px_#ff007f]" style={{ width: '85%' }} />
+                  <motion.div initial={{ width: 0 }} whileInView={{ width: '85%' }} viewport={{ once: true }} transition={{ duration: 1.4, delay: 0.7 }} className="h-full bg-[#ff007f] shadow-[0_0_4px_#ff007f]" />
                 </div>
               </div>
               <div className="space-y-1">
@@ -500,17 +559,18 @@ export default function Hero({ aboutData }) {
                   <span className="text-[#00f3ff]">90%</span>
                 </div>
                 <div className="h-1 bg-[#10141c] rounded-none overflow-hidden">
-                  <div className="h-full bg-[#00f3ff] shadow-[0_0_4px_#00f3ff]" style={{ width: '90%' }} />
+                  <motion.div initial={{ width: 0 }} whileInView={{ width: '90%' }} viewport={{ once: true }} transition={{ duration: 1.4, delay: 0.9 }} className="h-full bg-[#00f3ff] shadow-[0_0_4px_#00f3ff]" />
                 </div>
               </div>
             </div>
           </motion.div>
 
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center lg:justify-start max-w-sm pt-2">
-            <button
-              className="cyber-btn w-full sm:w-auto"
-              onClick={handleScrollToProjects}
-            >
+          {/* Action CTAs */}
+          <motion.div
+            className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center lg:justify-start max-w-sm pt-2"
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+          >
+            <button className="cyber-btn w-full sm:w-auto" onClick={handleScrollToProjects}>
               VIEW PROJECTS
             </button>
             <button
@@ -520,137 +580,112 @@ export default function Hero({ aboutData }) {
             >
               {downloading ? "DOWNLOADING..." : "DOWNLOAD RESUME"}
             </button>
-          </div>
+          </motion.div>
 
           {/* Social Icons */}
-          <div className="flex space-x-3.5 pt-3 justify-center lg:justify-start">
+          <motion.div
+            className="flex space-x-3.5 pt-3 justify-center lg:justify-start"
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, staggerChildren: 0.08 } } }}
+          >
+            {[
+              { href: github, title: "GitHub Profile", svg: <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z" />, fill: true },
+              { href: linkedin, title: "LinkedIn Profile", svg: <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />, fill: true },
+              { href: instagram, title: "Instagram Profile", svg: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></>, fill: false },
+              { href: twitter, title: "Twitter/X Profile", svg: <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />, fill: true },
+            ].map(({ href, title, svg, fill }) => (
+              <motion.a
+                key={title}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={playClickSound}
+                className="p-2.5 bg-[#10141c]/80 border border-[#1b253b] hover:border-[#00f3ff] hover:text-[#00f3ff] text-[#808a9d] transition-all duration-300 shadow-lg"
+                title={title}
+                variants={{ hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } }}
+                whileHover={{ scale: 1.15, y: -3 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill={fill ? "currentColor" : "none"}
+                  stroke={fill ? "none" : "currentColor"}
+                  strokeWidth={fill ? undefined : "2"}
+                  strokeLinecap={fill ? undefined : "round"}
+                  strokeLinejoin={fill ? undefined : "round"}
+                >
+                  {svg}
+                </svg>
+              </motion.a>
+            ))}
+          </motion.div>
+        </motion.div>
 
-            {/* GitHub */}
-            <a
-              href={github}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={playClickSound}
-              className="p-2.5 bg-[#10141c]/80 border border-[#1b253b] hover:border-[#00f3ff] hover:text-[#00f3ff] text-[#808a9d] transition-all shadow-lg"
-              title="GitHub Profile"
-            >
-              <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z" />
-              </svg>
-            </a>
-
-            {/* LinkedIn */}
-            <a
-              href={linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={playClickSound}
-              className="p-2.5 bg-[#10141c]/80 border border-[#1b253b] hover:border-[#00f3ff] hover:text-[#00f3ff] text-[#808a9d] transition-all shadow-lg"
-              title="LinkedIn Profile"
-            >
-              <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
-            </a>
-
-            {/* Instagram */}
-            <a
-              href={instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={playClickSound}
-              className="p-2.5 bg-[#10141c]/80 border border-[#1b253b] hover:border-[#00f3ff] hover:text-[#00f3ff] text-[#808a9d] transition-all shadow-lg"
-              title="Instagram Profile"
-            >
-              <svg className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-            </a>
-
-            {/* Twitter/X */}
-            <a
-              href={twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={playClickSound}
-              className="p-2.5 bg-[#10141c]/80 border border-[#1b253b] hover:border-[#00f3ff] hover:text-[#00f3ff] text-[#808a9d] transition-all shadow-lg"
-              title="Twitter/X Profile"
-            >
-              <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-          </div>
-
-        </div>
-
-        {/* Right Column: Telemetry Scanning Card & Server Log */}
-        <div className="lg:col-span-5 flex flex-col space-y-6 items-center">
-
+        {/* Right Column: 3D Interactive Telemetry Deck */}
+        <motion.div
+          className="lg:col-span-5 flex flex-col space-y-6 items-center"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {/* Interactive 3D Tilt Dials Card */}
           <div
-            onMouseMove={handleMouseMove}
-            className="w-full max-w-sm cyber-card-glow border border-[#1b253b] p-6 relative overflow-hidden scanner-container"
+            onMouseMove={handleCardMouseMove}
+            onMouseLeave={handleCardMouseLeave}
+            style={{
+              ...tiltStyle,
+              transition: 'transform 0.15s ease-out, border-color 0.3s, box-shadow 0.3s'
+            }}
+            className="w-full max-w-sm cyber-card-glow border border-[#1b253b] hover:border-[#00f3ff]/60 p-6 relative overflow-hidden scanner-container shadow-2xl group cursor-pointer"
           >
             <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
               <span className="font-hud text-[9px] text-[#00f3ff] tracking-widest uppercase">ACTIVE_ENGINE_DIALS</span>
-              <span className="font-code text-[8px] text-[#ff007f]">SYS_TELEMETRY</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-[#ff007f] rounded-full animate-ping" />
+                <span className="font-code text-[8.5px] text-[#ff007f] font-bold">SYS_TELEMETRY</span>
+              </div>
             </div>
 
-            {/* Realtime Telemetry Grid Wave */}
-            <div className="h-16 w-full mb-5 bg-black/60 border border-slate-900 overflow-hidden relative">
+            <div className="h-16 w-full mb-5 bg-black/70 border border-slate-900 overflow-hidden relative shadow-inner">
               <TelemetryWaveCanvas />
             </div>
 
-            {/* SVG GAUGE DIALS */}
             <div className="grid grid-cols-3 gap-2">
-              <SVGDial
-                percent={95}
-                label="AI & ML"
-                strokeColor="#ff007f"
-                glowColor="rgba(255, 0, 127, 0.4)"
-              />
-              <SVGDial
-                percent={90}
-                label="Full Stack"
-                strokeColor="#39ff14"
-                glowColor="rgba(57, 255, 20, 0.4)"
-              />
-              <SVGDial
-                percent={100}
-                valueText="8.2ms"
-                label="Model Inf"
-                strokeColor="#00f3ff"
-                glowColor="rgba(0, 243, 255, 0.4)"
-              />
+              <SVGDial percent={95} label="AI & ML" strokeColor="#ff007f" glowColor="rgba(255, 0, 127, 0.4)" />
+              <SVGDial percent={90} label="Full Stack" strokeColor="#39ff14" glowColor="rgba(57, 255, 20, 0.4)" />
+              <SVGDial percent={100} valueText="8.2ms" label="Model Inf" strokeColor="#00f3ff" glowColor="rgba(0, 243, 255, 0.4)" />
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center font-code text-[9px] text-[#808a9d]">
-              <span>CORE_ALLOC: <span className="text-white">CUDA/GPU</span></span>
-              <span>COMPILER: <span className="text-[#39ff14]">OPTIMIZED</span></span>
+              <span>CORE_ALLOC: <span className="text-white font-bold">CUDA/GPU</span></span>
+              <span>COMPILER: <span className="text-[#39ff14] font-bold">OPTIMIZED</span></span>
             </div>
           </div>
 
-          {/* Scrolling System Console */}
+          {/* Interactive Console Card */}
           <div
-            onMouseMove={handleMouseMove}
-            className="w-full max-w-sm cyber-card-glow p-4 flex flex-col h-56 border border-[#1b253b]"
+            className="w-full max-w-sm cyber-card-glow p-4 flex flex-col h-56 border border-[#1b253b] shadow-2xl"
           >
             <div className="border-b border-slate-800 pb-1 mb-2 flex items-center justify-between">
-              <span className="font-hud text-[8px] text-[#ff007f] tracking-widest">🖥️ ENGINE_TELEMETRY_LOGS</span>
+              <span className="font-hud text-[8px] text-[#ff007f] tracking-widest">ENGINE_TELEMETRY_LOGS</span>
               <span className="w-1.5 h-1.5 bg-[#ff007f] rounded-full animate-blink" />
             </div>
 
             <div ref={consoleContainerRef} className="flex-1 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin select-none font-code text-[10px] text-[#39ff14] leading-snug">
               {logs.map((log, i) => (
-                <div key={i} className="break-words opacity-90">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="break-words opacity-90"
+                >
                   <span className="text-[#808a9d] mr-1">&gt;&gt;</span> {log}
-                </div>
+                </motion.div>
               ))}
             </div>
 
-            <form onSubmit={handleCommandSubmit} className="mt-2 pt-1.5 border-t border-slate-850 flex items-center text-[10px] font-code text-[#39ff14]">
+            <form onSubmit={handleCommandSubmit} className="mt-2 pt-1.5 border-t border-slate-800 flex items-center text-[10px] font-code text-[#39ff14]">
               <span className="text-[#808a9d] mr-1">guest@amn-hud:~$</span>
               <input
                 type="text"
@@ -660,10 +695,10 @@ export default function Hero({ aboutData }) {
                 placeholder="Type 'help'..."
                 autoComplete="off"
               />
+              <span className="w-1.5 h-3 bg-[#39ff14] animate-cursor ml-0.5" />
             </form>
           </div>
-
-        </div>
+        </motion.div>
 
       </div>
     </section>

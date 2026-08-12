@@ -90,6 +90,16 @@ def projects_list(request):
     if not projects.exists():
         default_projects = [
             {
+                'title': 'InterviewIQ — AI Interview Studio',
+                'description': 'Multimodal AI interview preparation platform featuring a 3D avatar interviewer (Alex), real-time WebSockets, Groq LLM intelligence, viseme lip-syncing, and automated candidate performance analytics.',
+                'image_url': '',
+                'tech_stack': ["Python", "Django", "Next.js", "React.js", "Groq AI", "WebSockets", "Three.js", "PostgreSQL"],
+                'github_url': 'https://github.com/abhishekmnair81/interviewiq',
+                'live_url': None,
+                'is_featured': True,
+                'order': 1
+            },
+            {
                 'title': 'AI-Integrated Telemedicine System',
                 'description': 'An intelligent telemedicine system combining AI and ML to enhance healthcare accessibility in rural areas. Features AI-based medical chatbot support, medication prediction, offline-compatible medicine reminders, and patient-doctor-pharmacist interaction.',
                 'image_url': '',
@@ -97,7 +107,7 @@ def projects_list(request):
                 'github_url': 'https://github.com/abhishekmnair81/TELEMEDICINE-ACCESS',
                 'live_url': None,
                 'is_featured': True,
-                'order': 1
+                'order': 2
             },
             {
                 'title': 'LearnNova — E-Learning Web Application',

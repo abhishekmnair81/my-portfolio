@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import LoadingSkeleton from './ui/LoadingSkeleton';
 import { playClickSound } from '../utils/sound';
 import DecryptedText from './ui/DecryptedText';
@@ -6,7 +7,7 @@ import DecryptedText from './ui/DecryptedText';
 function ProjectSchematic({ techStack = [] }) {
   const tech = techStack.join(', ').toLowerCase();
   
-  let type = 'ml'; // default
+  let type = 'ml';
   let nodes = ['INPUT', 'MODEL', 'OUTPUT'];
   let color = '#ff007f';
   
@@ -25,17 +26,15 @@ function ProjectSchematic({ techStack = [] }) {
   }
 
   return (
-    <div className="w-full bg-black/60 border border-slate-900 p-2.5 flex flex-col items-center mt-2 relative select-none">
-      <span className="font-hud text-[8px] text-[#ffaa00] mb-2 uppercase self-start tracking-wider">
-        [ SYSTEM SCHEMATIC: {type.toUpperCase()} ]
+    <div className="w-full bg-black/80 border border-slate-800 p-2 flex flex-col items-center mt-2 relative select-none">
+      <span className="font-hud text-[7.5px] text-[#ffaa00] mb-1.5 uppercase self-start tracking-wider">
+        [ SCHEMATIC: {type.toUpperCase()} ]
       </span>
       
-      <svg className="w-full max-w-[280px] h-[75px]" viewBox="0 0 240 70">
-        {/* Paths */}
+      <svg className="w-full max-w-[240px] h-[60px]" viewBox="0 0 240 70">
         <path d="M 45,35 L 95,35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
         <path d="M 145,35 L 195,35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
         
-        {/* Animated Glow Dots */}
         <circle r="2.5" fill={color}>
           <animateMotion dur="2s" repeatCount="indefinite" path="M 45,35 L 95,35" />
         </circle>
@@ -43,45 +42,255 @@ function ProjectSchematic({ techStack = [] }) {
           <animateMotion dur="2s" begin="1s" repeatCount="indefinite" path="M 145,35 L 195,35" />
         </circle>
 
-        {/* Node 1 */}
         <rect x="5" y="20" width="40" height="30" fill="#0d1118" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
         <text x="25" y="32" textAnchor="middle" fill="#fff" className="font-code text-[6px] font-bold">
           {nodes[0]}
         </text>
-        <text x="25" y="44" textAnchor="middle" fill="#808a9d" className="font-code text-[5px]">
-          [0x5A_IN]
-        </text>
 
-        {/* Node 2 */}
         <rect x="95" y="20" width="50" height="30" fill="#0d1118" stroke={color} strokeWidth="1.2" style={{ filter: `drop-shadow(0 0 3px ${color}44)` }} />
         <text x="120" y="32" textAnchor="middle" fill="#fff" className="font-code text-[6px] font-bold">
           {nodes[1]}
         </text>
-        <text x="120" y="44" textAnchor="middle" fill={color} className="font-code text-[5px] animate-pulse">
-          [0xB3_PROC]
-        </text>
 
-        {/* Node 3 */}
         <rect x="195" y="20" width="40" height="30" fill="#0d1118" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
         <text x="215" y="32" textAnchor="middle" fill="#fff" className="font-code text-[6px] font-bold">
           {nodes[2]}
         </text>
-        <text x="215" y="44" textAnchor="middle" fill="#808a9d" className="font-code text-[5px]">
-          [0xF7_OUT]
-        </text>
       </svg>
-      
-      <div className="flex justify-between w-full font-code text-[7px] text-slate-500 mt-1 border-t border-slate-950 pt-1">
-        <span>FLOW: BI-DIRECTIONAL</span>
-        <span>TELEMETRY: ONLINE</span>
+    </div>
+  );
+}
+
+// Curved Arc 3D Deck Stage - Cards slide 1-by-1 along a curved parabolic arch upon 2-finger touchpad scroll or touch swipes
+function CurvedArc3DStage({ projects, onSelectSchematic, openSchematicId }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollCooldownRef = useRef(false);
+  const count = projects.length;
+
+  // Intercept 2-finger touchpad scroll & wheel events to step card-by-card along the curved arc
+  const handleWheel = (e) => {
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(delta) < 15 || scrollCooldownRef.current) return;
+
+    scrollCooldownRef.current = true;
+
+    if (delta > 0) {
+      // Step right along the curved arc
+      setActiveIndex(prev => (prev + 1) % count);
+      playClickSound();
+    } else {
+      // Step left along the curved arc
+      setActiveIndex(prev => (prev - 1 + count) % count);
+      playClickSound();
+    }
+
+    setTimeout(() => {
+      scrollCooldownRef.current = false;
+    }, 320);
+  };
+
+  // Touch drag handlers for mobile / touchscreens
+  const touchStartXRef = useRef(0);
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    if (Math.abs(deltaX) > 35) {
+      if (deltaX < 0) {
+        setActiveIndex(prev => (prev + 1) % count);
+        playClickSound();
+      } else {
+        setActiveIndex(prev => (prev - 1 + count) % count);
+        playClickSound();
+      }
+    }
+  };
+
+  if (count === 0) return null;
+
+  return (
+    <div 
+      className="relative w-full py-8 flex flex-col items-center justify-center overflow-hidden select-none"
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Sleek Touchpad Guidance HUD */}
+      <div className="flex items-center justify-center space-x-3 bg-[#0b0e14]/90 border border-[#00f3ff]/40 px-4 py-2 mb-6 z-20 font-hud text-[9.5px] text-[#00f3ff] shadow-[0_0_15px_rgba(0,243,255,0.15)]">
+        <span className="w-2 h-2 bg-[#39ff14] rounded-full animate-ping" />
+        <span className="tracking-widest uppercase font-bold">
+          ✌ SCROLL 2 FINGERS ON TOUCHPAD / WHEEL TO SLIDE 1-BY-1 ALONG 3D CURVED ARC
+        </span>
+        <span className="text-[#ff007f] font-code text-[9px] font-bold">
+          [BUILD #0{activeIndex + 1} / {count}]
+        </span>
+      </div>
+
+      {/* 3D Curved Arc Viewport */}
+      <div className="relative w-full h-[480px] max-w-6xl flex items-center justify-center perspective-[1500px]">
+        
+        {/* Holographic Arc Background Floor Guides */}
+        <div className="absolute w-[800px] h-[300px] rounded-full border border-[#00f3ff]/15 pointer-events-none transform rotateX-[75deg] translate-y-24" />
+
+        {projects.map((project, idx) => {
+          // Calculate offset relative to active card
+          let offset = idx - activeIndex;
+
+          // Wrap around logic for seamless round circular loop
+          if (offset > count / 2) offset -= count;
+          if (offset < -count / 2) offset += count;
+
+          const absOffset = Math.abs(offset);
+
+          // Render visible range
+          if (absOffset > 3) return null;
+
+          const isCenter = offset === 0;
+
+          // Math for Curved Parabolic Arc Deck:
+          // Cards slide along a curved horizontal bow (translateX), curving backward into 3D depth (translateZ & rotateY)
+          const translateX = offset * 255;
+          const rotateY = offset * -18; // Curves inward towards viewer at center
+          const translateZ = -Math.pow(absOffset, 1.35) * 85 + (isCenter ? 35 : 0);
+          const rotateZ = offset * -1.5; // Subtle fan angle
+          const scale = isCenter ? 1 : Math.max(0.72, 1 - absOffset * 0.12);
+          const opacity = isCenter ? 1 : Math.max(0.25, 0.7 - absOffset * 0.2);
+
+          const techList = Array.isArray(project.tech_stack) 
+            ? project.tech_stack 
+            : (project.technologies ? project.technologies.split(',') : []);
+
+          const githubUrl = project.github_url || project.github_link;
+          const liveUrl = project.live_url || project.live_link;
+
+          return (
+            <motion.div
+              key={project.id}
+              onClick={() => {
+                if (!isCenter) {
+                  playClickSound();
+                  setActiveIndex(idx);
+                }
+              }}
+              initial={false}
+              animate={{
+                x: translateX,
+                rotateY: rotateY,
+                rotateZ: rotateZ,
+                z: translateZ,
+                scale: scale,
+                opacity: opacity
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 220,
+                damping: 25
+              }}
+              style={{ transformStyle: 'preserve-3d' }}
+              className={`absolute w-[280px] sm:w-[310px] cursor-pointer transition-shadow duration-300 ${
+                isCenter ? 'z-30' : 'z-10'
+              }`}
+            >
+              <div 
+                className={`cyber-card-glow border p-5 rounded-none relative bg-[#0b0e14]/95 backdrop-blur-md transition-all duration-300 ${
+                  isCenter 
+                    ? 'border-[#00f3ff] shadow-[0_0_30px_rgba(0,243,255,0.45)]' 
+                    : 'border-slate-800/80 hover:border-slate-600'
+                }`}
+              >
+                {/* Accent Corner Brackets on Center Card */}
+                {isCenter && (
+                  <>
+                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#00f3ff]" />
+                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#00f3ff]" />
+                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#00f3ff]" />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#00f3ff]" />
+                  </>
+                )}
+
+                {/* Header */}
+                <div className="flex justify-between items-center mb-2.5 border-b border-slate-800 pb-2">
+                  <span className="font-code text-[8px] text-[#ff007f]">BUILD #0{project.id || idx + 1}</span>
+                  {project.is_featured && (
+                    <span className="font-code text-[8px] text-[#39ff14] bg-[#39ff14]/10 border border-[#39ff14]/30 px-1.5 py-0.5">
+                      FEATURED BUILD
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h3 className="font-hud text-xs sm:text-sm text-white font-bold mb-2 uppercase text-left group-hover:text-[#00f3ff]">
+                  {project.title}
+                </h3>
+
+                {/* Description */}
+                <p className="font-sans text-xs text-[#808a9d] leading-relaxed mb-4 line-clamp-3 text-left">
+                  {project.description}
+                </p>
+
+                {/* Tech Stack */}
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {techList.map((tech, tIdx) => (
+                    <span key={tIdx} className="font-code text-[8.5px] bg-black/70 border border-slate-800 text-slate-300 px-1.5 py-0.5">
+                      {tech.trim()}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Schematic view */}
+                {openSchematicId === project.id && (
+                  <div className="mb-4 text-left">
+                    <ProjectSchematic techStack={techList} />
+                  </div>
+                )}
+
+                {/* Card Buttons */}
+                <div className="flex space-x-2 pt-3 border-t border-slate-850">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onSelectSchematic(project.id); }}
+                    className="cyber-btn-secondary text-[8.5px] py-1.5 px-2 flex-1"
+                  >
+                    {openSchematicId === project.id ? 'CLOSE SCHEMA' : 'SCHEMA'}
+                  </button>
+                  {liveUrl && (
+                    <a 
+                      href={liveUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      onClick={(e) => e.stopPropagation()} 
+                      className="cyber-btn text-[8.5px] py-1.5 px-2 flex-1 text-center"
+                    >
+                      LIVE DEMO
+                    </a>
+                  )}
+                  {githubUrl && (
+                    <a 
+                      href={githubUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      onClick={(e) => e.stopPropagation()} 
+                      className="cyber-btn-secondary text-[8.5px] py-1.5 px-2 flex-1 text-center"
+                    >
+                      GITHUB
+                    </a>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
+
   );
 }
 
 export default function Projects({ projectsData, loading, error, loadDemoData }) {
   const [openSchematicId, setOpenSchematicId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [viewMode, setViewMode] = useState('3D');
 
   const filters = [
     { id: 'ALL', label: 'ALL_BUILDS' },
@@ -121,7 +330,6 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
 
   const projects = projectsData || [];
   
-  // Sort projects: featured first, then by order
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.is_featured && !b.is_featured) return -1;
     if (!a.is_featured && b.is_featured) return 1;
@@ -146,7 +354,7 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
 
   return (
     <section id="projects" className="px-4 py-20 bg-[#070708] border-b border-[#1b253b]">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Section Header */}
         <div className="text-center">
@@ -155,11 +363,11 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
               <DecryptedText text="[ 04 // PROJECT GARAGE ]" />
             </h2>
           </div>
-          <p className="font-sans text-xs text-[#808a9d] mt-2">Access blueprint blueprints, active build files, and source trees</p>
+          <p className="font-sans text-xs text-[#808a9d] mt-2">Interactive 1-by-1 3D curved arc stage and technical build catalog</p>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-2 justify-center pb-2">
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2 justify-center border-b border-slate-900 pb-4">
           {filters.map(f => {
             const count = sortedProjects.filter(p => {
               if (f.id === 'ALL') return true;
@@ -195,140 +403,18 @@ export default function Projects({ projectsData, loading, error, loadDemoData })
           })}
         </div>
 
-        {/* Project Blueprint Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => {
-            const techList = Array.isArray(project.tech_stack) 
-              ? project.tech_stack 
-              : (project.technologies ? project.technologies.split(',') : []);
+        {/* Curved Arc 3D Stage */}
+        <CurvedArc3DStage 
+          projects={filteredProjects} 
+          openSchematicId={openSchematicId}
+          onSelectSchematic={(id) => {
+            playClickSound();
+            setOpenSchematicId(openSchematicId === id ? null : id);
+          }}
+        />
 
-            const githubUrl = project.github_url || project.github_link;
-            const liveUrl = project.live_url || project.live_link;
-
-            return (
-              <div 
-                key={project.id} 
-                onMouseMove={handleMouseMove}
-                className="cyber-card-glow border border-slate-900 p-5 flex flex-col justify-between relative overflow-hidden group"
-              >
-                {/* Tech Bracket corners */}
-                <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#00f3ff] opacity-40 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#00f3ff] opacity-40 group-hover:opacity-100 transition-opacity" />
-
-                {/* Blueprint grid lines on card hover */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,243,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,243,255,0.02)_1px,transparent_1px)] bg-[size:16px_16px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                {/* Sweeping laser scanline inside card on hover */}
-                <div className="absolute left-0 w-full h-[1.5px] bg-[#00f3ff] opacity-0 group-hover:opacity-20 group-hover:animate-[card-scan_4s_linear_infinite] pointer-events-none z-10" />
-
-                <div>
-                   {/* Schematic Header */}
-                  <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
-                    <span className="font-code text-[8px] text-[#ff007f]">BUILD_NO: #0{project.id || 'X'}</span>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => { playClickSound(); setOpenSchematicId(openSchematicId === project.id ? null : project.id); }}
-                        className={`font-code text-[8px] px-1.5 py-0.5 border cursor-pointer transition-all select-none ${
-                          openSchematicId === project.id 
-                            ? 'border-[#00f3ff] text-[#00f3ff] bg-[#00f3ff]/10 font-bold shadow-[0_0_6px_rgba(0,243,255,0.25)]' 
-                            : 'border-slate-800 text-[#808a9d] hover:border-slate-500 hover:text-white'
-                        }`}
-                      >
-                        {openSchematicId === project.id ? '[CLOSE SCHEMA]' : '[VIEW SCHEMA]'}
-                      </button>
-                      <span className="font-code text-[8px] text-[#39ff14] flex items-center space-x-1">
-                        <span className="w-1.5 h-1.5 bg-[#39ff14] rounded-full animate-pulse" />
-                        <span>STABLE</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Project Title */}
-                  <h3 className="font-hud text-sm text-white font-bold mb-2 group-hover:text-[#00f3ff] transition-colors uppercase">
-                    {project.title}
-                  </h3>
-
-                  {/* Featured Tag / Badge */}
-                  {project.is_featured && (
-                    <div className="inline-block bg-[#00f3ff]/10 border border-[#00f3ff]/30 px-2 py-0.5 mb-3">
-                      <span className="font-code text-[8px] text-[#00f3ff] tracking-widest uppercase">
-                        ★ FEATURED BUILD | Currently Working On
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Description */}
-                  <p className="font-sans text-xs text-[#808a9d] leading-relaxed mb-4">
-                    {project.description}
-                  </p>
-
-                  {/* Tech Tags */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {techList.map((tech, tIdx) => (
-                      <span 
-                        key={tIdx} 
-                        className="font-code text-[9px] bg-black/60 border border-slate-800 text-slate-300 px-1.5 py-0.5 rounded-none"
-                      >
-                        {tech.trim()}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Schematic Drawer */}
-                  {openSchematicId === project.id && (
-                    <div className="mb-5 animate-[fadeIn_0.2s_ease-out]">
-                      <ProjectSchematic techStack={techList} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Cyber Action Buttons */}
-                <div className="flex space-x-3 pt-3 border-t border-slate-850">
-                  {liveUrl && (
-                    <a 
-                      href={liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={playClickSound}
-                      className="cyber-btn text-[9px] py-2 px-3 flex-1 text-center"
-                    >
-                      LAUNCH_DEMO
-                    </a>
-                  )}
-                  {githubUrl && (
-                    <a 
-                      href={githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={playClickSound}
-                      className="cyber-btn-secondary text-[9px] py-2 px-3 flex-1 text-center"
-                    >
-                      SOURCE_TREE
-                    </a>
-                  )}
-                </div>
-
-              </div>
-            );
-          })}
-
-          {filteredProjects.length === 0 && (
-            <div className="col-span-full text-center py-12 bg-[#0b0e14]/50 border border-dashed border-slate-800">
-              <span className="font-hud text-xs text-[#808a9d]">[ SHOWROOM GARAGE EMPTY // SYSTEM OFFLINE ]</span>
-            </div>
-          )}
-        </div>
 
       </div>
-
-      {/* Embedded style keyframes for project card scanning */}
-      <style>{`
-        @keyframes card-scan {
-          0% { top: 0%; }
-          50% { top: 100%; }
-          100% { top: 0%; }
-        }
-      `}</style>
     </section>
   );
 }

@@ -19,6 +19,18 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+/* 3D Stage Perspective Utilities */
+.transform-style-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+}
+
+
 /* Futuristic Tech Headers */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Orbitron', sans-serif;
@@ -28,17 +40,15 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: #08090c;
-  border-left: 1px solid #1a2233;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
-  border: 1px solid #08090c;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-cyan);
@@ -105,6 +115,22 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   text-decoration: none;
   box-shadow: 0 4px 14px rgba(0, 243, 255, 0.35);
+  overflow: hidden;
+}
+
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transition: left 0.4s ease;
+}
+
+.cyber-btn:hover::before {
+  left: 150%;
 }
 
 .cyber-btn:hover {
@@ -136,6 +162,22 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  overflow: hidden;
+}
+
+.cyber-btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,243,255,0.15), transparent);
+  transition: left 0.4s ease;
+}
+
+.cyber-btn-secondary:hover::before {
+  left: 150%;
 }
 
 .cyber-btn-secondary:hover {
@@ -216,6 +258,159 @@ h1, h2, h3, h4, h5, h6 {
   animation: blink 1s infinite;
 }
 
+/* ==========================================
+   PREMIUM ANIMATIONS SYSTEM
+   ========================================== */
+
+/* 1. Floating Particle Orbs */
+@keyframes float-orb {
+  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+  25% { transform: translateY(-18px) translateX(8px) scale(1.04); }
+  50% { transform: translateY(-8px) translateX(-10px) scale(0.97); }
+  75% { transform: translateY(-22px) translateX(4px) scale(1.02); }
+}
+
+.animate-float-orb {
+  animation: float-orb 8s ease-in-out infinite;
+}
+
+.animate-float-orb-slow {
+  animation: float-orb 13s ease-in-out infinite reverse;
+}
+
+/* 2. Hero Name Letter Drop-In */
+@keyframes letter-drop {
+  0% { opacity: 0; transform: translateY(-30px) rotateX(90deg); }
+  60% { transform: translateY(4px) rotateX(-10deg); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+.animate-letter-drop {
+  animation: letter-drop 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* 3. Neon Pulse Border */
+@keyframes neon-pulse-border {
+  0%, 100% { box-shadow: 0 0 4px var(--color-cyan), 0 0 10px rgba(0,243,255,0.2); }
+  50% { box-shadow: 0 0 10px var(--color-cyan), 0 0 25px rgba(0,243,255,0.4), 0 0 50px rgba(0,243,255,0.1); }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse-border 2.5s ease-in-out infinite;
+}
+
+/* 4. Corner bracket draw-in */
+@keyframes bracket-draw {
+  from { width: 0; height: 0; opacity: 0; }
+  to { width: 16px; height: 16px; opacity: 1; }
+}
+
+/* 5. Holographic shimmer sweep */
+@keyframes holo-sweep {
+  0% { background-position: -200% center; }
+  100% { background-position: 300% center; }
+}
+
+.animate-holo-sweep {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(0, 243, 255, 0.12) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: holo-sweep 3.5s linear infinite;
+}
+
+/* 6. Section reveal slide-up with fade */
+@keyframes section-reveal {
+  0% { opacity: 0; transform: translateY(40px) scale(0.98); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.animate-section-reveal {
+  animation: section-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 7. Dial/gauge tick animation */
+@keyframes dial-tick {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* 8. Data stream text lines */
+@keyframes data-stream {
+  0% { transform: translateX(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+.animate-data-stream {
+  animation: data-stream 4s linear infinite;
+}
+
+/* 9. Matrix column fall */
+@keyframes matrix-col {
+  0% { transform: translateY(-100%); opacity: 0.8; }
+  80% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* 10. Radar ping ripple */
+@keyframes radar-ping {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.animate-radar-ping {
+  animation: radar-ping 1.8s ease-out infinite;
+}
+
+/* 11. Glitch flicker for headings */
+@keyframes glitch-flicker {
+  0%, 95%, 100% { opacity: 1; transform: none; clip-path: none; }
+  96% { opacity: 0.8; transform: skewX(-2deg); }
+  97% { opacity: 1; transform: skewX(1deg) translateX(2px); }
+  98% { clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); transform: translateX(-2px); }
+  99% { clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); transform: translateX(2px); }
+}
+
+.animate-glitch-flicker {
+  animation: glitch-flicker 6s steps(1) infinite;
+}
+
+/* 12. Typewriter cursor */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor {
+  animation: cursor-blink 0.8s step-end infinite;
+}
+
+/* 13. Card tilt-glow on hover */
+@keyframes card-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 243, 255, 0.05); }
+  50% { box-shadow: 0 0 24px rgba(0, 243, 255, 0.12); }
+}
+
+/* 14. Scanline sweep (full width) */
+@keyframes scanline-sweep {
+  0% { top: -5%; opacity: 0.7; }
+  100% { top: 105%; opacity: 0; }
+}
+
+.animate-scanline-sweep {
+  animation: scanline-sweep 3s linear infinite;
+}
+
+/* 15. Progress bar fill */
+@keyframes bar-fill {
+  from { width: 0%; }
+}
+
 /* Glassmorphic Cyber Cards with Mouse-Follower Glow */
 .cyber-card-glow {
   position: relative;
@@ -224,7 +419,11 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.cyber-card-glow:hover {
+  transform: translateY(-2px);
 }
 
 /* Mouse-following border lighting */
@@ -233,7 +432,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  padding: 1.2px; /* Border thickness */
+  padding: 1.2px;
   background: radial-gradient(
     180px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
     var(--color-cyan),
@@ -298,3 +497,9 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: translate(0); }
 }
 
+/* ==========================================
+   SHIMMER - Button shine effect
+   ========================================== */
+@keyframes shimmer {
+  100% { transform: translateX(200%); }
+}

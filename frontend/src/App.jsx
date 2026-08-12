@@ -12,10 +12,8 @@ import Footer from './components/Footer';
 import AchievementToast from './components/ui/AchievementToast';
 import WelcomeSplash from './components/WelcomeSplash';
 import NeuralGrid from './components/ui/NeuralGrid';
-import DiagnosticsDeck from './components/ui/DiagnosticsDeck';
 import useFetch from './hooks/useFetch';
 import MatrixOverlay from './components/ui/MatrixOverlay';
-import SystemControlCenter from './components/ui/SystemControlCenter';
 import { playBootSound, startAmbientHum } from './utils/sound';
 
 function App() {
@@ -155,25 +153,9 @@ function App() {
       {/* Full screen falling hex matrix rain overlay */}
       {isBooted && matrixRain && <MatrixOverlay />}
 
-      {/* System Diagnostics HUD Deck */}
-      {isBooted && <DiagnosticsDeck addAchievement={addAchievement} />}
 
       {/* Achievements toast */}
       <AchievementToast achievements={achievements} removeAchievement={removeAchievement} />
-
-      {/* Floating System Control Center Cockpit */}
-      {isBooted && (
-        <SystemControlCenter 
-          neuralGridEnabled={neuralGridEnabled}
-          setNeuralGridEnabled={setNeuralGridEnabled}
-          matrixRain={matrixRain}
-          setMatrixRain={setMatrixRain}
-          crtEffects={crtEffects}
-          setCrtEffects={setCrtEffects}
-          soundMuted={soundMuted}
-          setSoundMuted={setSoundMuted}
-        />
-      )}
 
       <Navbar 
         activeSection={activeSection} 

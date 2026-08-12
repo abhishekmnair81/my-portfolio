@@ -77,63 +77,73 @@ export const MOCK_SKILLS = [
 export const MOCK_PROJECTS = [
   {
     id: 1,
-    title: "AI-Integrated Telemedicine System",
-    description: "An intelligent telemedicine system combining AI and ML to enhance healthcare accessibility in rural areas. Features AI-based medical chatbot support, medication prediction, offline-compatible medicine reminders, and patient-doctor-pharmacist interaction.",
-    tech_stack: ["Python", "Django", "Django REST Framework", "React.js (PWA)", "Machine Learning", "Generative AI", "GROQ API", "IndexedDB", "Service Workers", "PostgreSQL"],
-    github_url: "https://github.com/abhishekmnair81/TELEMEDICINE-ACCESS",
+    title: "InterviewIQ — AI Interview Studio",
+    description: "Multimodal AI interview preparation platform featuring a 3D avatar interviewer (Alex), real-time WebSockets, Groq LLM intelligence, viseme lip-syncing, and automated candidate performance analytics.",
+    tech_stack: ["Python", "Django", "Next.js", "React.js", "Groq AI", "WebSockets", "Three.js", "PostgreSQL"],
+    github_url: "https://github.com/abhishekmnair81/interviewiq",
     live_url: null, // Hidden
     is_featured: true,
     order: 1
   },
   {
     id: 2,
+    title: "AI-Integrated Telemedicine System",
+    description: "An intelligent telemedicine system combining AI and ML to enhance healthcare accessibility in rural areas. Features AI-based medical chatbot support, medication prediction, offline-compatible medicine reminders, and patient-doctor-pharmacist interaction.",
+    tech_stack: ["Python", "Django", "Django REST Framework", "React.js (PWA)", "Machine Learning", "Generative AI", "GROQ API", "IndexedDB", "Service Workers", "PostgreSQL"],
+    github_url: "https://github.com/abhishekmnair81/TELEMEDICINE-ACCESS",
+    live_url: null, // Hidden
+    is_featured: true,
+    order: 2
+  },
+  {
+    id: 3,
     title: "LearnNova — E-Learning Web Application",
     description: "A full-stack e-learning web application with dynamic student dashboards, course management, and progress tracking. Built with RESTful API integration and responsive UI design for an interactive digital learning environment.",
     tech_stack: ["React.js", "CSS", "Python", "REST API", "SQLite"],
     github_url: "https://github.com/abhishekmnair81/LearnNova",
     live_url: null, // Hidden
     is_featured: false,
-    order: 2
+    order: 3
   },
   {
-    id: 3,
+    id: 4,
     title: "Credit Card Fraud Detection",
     description: "Machine learning model to detect fraudulent credit card transactions using classification algorithms and data analysis techniques.",
     tech_stack: ["Python", "Machine Learning", "Scikit-Learn", "Pandas", "NumPy", "Jupyter Notebook"],
     github_url: "https://github.com/abhishekmnair81/Credit-Card-Fraud-Detection",
     live_url: null, // Hidden
     is_featured: false,
-    order: 3
+    order: 4
   },
   {
-    id: 4,
+    id: 5,
     title: "Plant Disease Detection",
     description: "Deep learning model that detects plant diseases from leaf images using image classification techniques.",
     tech_stack: ["Python", "Deep Learning", "PyTorch", "Jupyter Notebook"],
     github_url: "https://github.com/abhishekmnair81/Plant-Disease-Detection",
     live_url: null, // Hidden
     is_featured: false,
-    order: 4
+    order: 5
   },
   {
-    id: 5,
+    id: 6,
     title: "Safety Helmet Detection — YOLOv8",
     description: "Real-time object detection system to identify whether workers are wearing safety helmets using the YOLOv8 model for workplace safety compliance.",
     tech_stack: ["Python", "YOLOv8", "Deep Learning", "Computer Vision", "Jupyter Notebook"],
     github_url: "https://github.com/abhishekmnair81/Safety-Helmet-Detection-YOLOv8",
     live_url: null, // Hidden
     is_featured: false,
-    order: 5
+    order: 6
   },
   {
-    id: 6,
+    id: 7,
     title: "Sentiment Analysis of Reviews",
     description: "NLP-based sentiment analysis system that classifies customer reviews as positive, negative, or neutral using text processing and machine learning.",
     tech_stack: ["Python", "NLP", "Scikit-Learn", "Pandas", "NLTK", "Jupyter Notebook"],
     github_url: "https://github.com/abhishekmnair81/Sentiment-Analysis-of-Reviews",
     live_url: null, // Hidden
     is_featured: false,
-    order: 6
+    order: 7
   }
 ];
 
